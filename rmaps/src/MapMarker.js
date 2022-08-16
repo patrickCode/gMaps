@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 
-function MapMarker(options) {
+function MapMarker({
+    onLocationChanged,
+    ...options
+}) {
     const [marker, setMarker] = useState();
     const [isMarkerLoaded, setMarkerLoaded] = useState(false);
 
@@ -18,17 +21,20 @@ function MapMarker(options) {
     }, [marker]);
 
     useEffect(() => {
-        if (marker && !isMarkerLoaded) {
+        if (marker) {
             marker.setOptions(options);
-            marker.setDraggable(true);
+
+            marker.addListener('dragend', (event) => {
+                const newLocation = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+                if (onLocationChanged) {
+                    onLocationChanged(newLocation);
+                }
+            });
+
             setMarkerLoaded(true);
 
-            marker.addListener('dragend', (e) => {
-                console.log(e.latLng.lat());
-                console.log(e.latLng.lng());
-            });
         }
-    }, [isMarkerLoaded, options]);
+    }, [marker, isMarkerLoaded, options, onLocationChanged]);
 
 
     // Since the marker is loaded in the map, null is returned from the marker component
