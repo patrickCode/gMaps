@@ -17,6 +17,7 @@ function Map() {
 
     const [mapCenter, setMapCenter] = useState();
     const [isMapLoading, setMapLoading] = useState(true);
+    const [isMapLoaded, setMapLoaded] = useState(false);
     const [address, setAddress] = useState();
     const [isAddressLoading, setAddressLoading] = useState(true);
     const [isCenteringInProgress, setCenteringInProgress] = useState(false);
@@ -33,6 +34,7 @@ function Map() {
             showAddress(currentLocation);
             setMapLoading(false);
             setCenteringInProgress(false);
+            setMapLoaded(true);
         });
     }
 
@@ -76,7 +78,7 @@ function Map() {
         });
     }
 
-    if (isMapLoading) {
+    if (!isMapLoaded) {
         return (
             <>
                 <h3>Please wait while we load the map. Ensure geolocation is turned on...</h3>
@@ -92,7 +94,7 @@ function Map() {
     return (
         <>
             <Wrapper apiKey={GOOGLE_MAP_API_KEY} render={mapLoadingRender}>
-                <GoogleMap center={mapCenter} zoom={zoom}>
+                <GoogleMap centerMapAtCurrentLocation={centerMapAtCurrentLocation} center={mapCenter} zoom={zoom}>
                     <MapMarker position={mapCenter} draggable={true} label={"H"} onLocationChanged={handlerMarkerLocationChange} />
                 </GoogleMap>
             </Wrapper>

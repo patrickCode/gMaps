@@ -4,6 +4,7 @@ import { createCustomEqual } from "fast-equals";
 
 function GoogleMap({
     children,
+    centerMapAtCurrentLocation,
     ...mapOptions
 }) {
     const ref = useRef();
@@ -11,13 +12,41 @@ function GoogleMap({
 
     useEffect(() => {
         if (ref.current && !map) {
-            setMap(new window.google.maps.Map(ref.current, {}));
+            const gMap = new window.google.maps.Map(ref.current, {});
+            var controlDiv = document.createElement('div');
+
+            // Set CSS for the control border
+            var controlUI = document.createElement('div');
+            controlUI.style.backgroundColor = '#fff';
+            controlUI.style.border = '2px solid #fff';
+            controlUI.style.cursor = 'pointer';
+            controlUI.style.marginBottom = '22px';
+            controlUI.style.textAlign = 'center';
+            controlUI.title = 'Click to recenter the map';
+            controlDiv.appendChild(controlUI);
+
+            // Set CSS for the control interior
+            var controlText = document.createElement('div');
+            controlText.style.color = 'rgb(25,25,25)';
+            controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+            controlText.style.fontSize = '16px';
+            controlText.style.lineHeight = '38px';
+            controlText.style.paddingLeft = '5px';
+            controlText.style.paddingRight = '5px';
+            controlText.innerHTML = '<h3>Locate Me</h3>';
+            controlUI.appendChild(controlText);
+            controlUI.addEventListener('click', () => {
+                if (centerMapAtCurrentLocation) {
+                    centerMapAtCurrentLocation();
+                }
+            })
+            gMap.controls[window.google.maps.ControlPosition.BOTTOM_CENTER].push(controlDiv);
+            setMap(gMap);
         }
     }, [ref, map]);
 
     // This is to ensure that the map doesn't load unnecessarily, unless the co-ordinates have changed
     useDeepCompareEffectForMaps(() => {
-        console.log("Here 321");
         if (map) {
             // Do not change the zoom if user has already zoomed on the map
             const currentMapZoom = map.getZoom();
