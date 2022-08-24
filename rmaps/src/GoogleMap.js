@@ -1,10 +1,14 @@
 import React, { useRef, useEffect, useState, Children, isValidElement, cloneElement } from 'react';
 import { isLatLngLiteral } from "@googlemaps/typescript-guards";
 import { createCustomEqual } from "fast-equals";
+import CreateLocateMeButton from './locateMeButton';
+import StaticMapMarker from './StaticMapMarker';
 
 function GoogleMap({
     children,
     centerMapAtCurrentLocation,
+    draggableSelectionPicker,
+    onDragEnd,
     ...mapOptions
 }) {
     const ref = useRef();
@@ -13,34 +17,13 @@ function GoogleMap({
     useEffect(() => {
         if (ref.current && !map) {
             const gMap = new window.google.maps.Map(ref.current, {});
-            var controlDiv = document.createElement('div');
+            const locateMeButton = CreateLocateMeButton(centerMapAtCurrentLocation);
+            gMap.controls[window.google.maps.ControlPosition.BOTTOM_CENTER].push(locateMeButton);
 
-            // Set CSS for the control border
-            var controlUI = document.createElement('div');
-            controlUI.style.backgroundColor = '#fff';
-            controlUI.style.border = '2px solid #fff';
-            controlUI.style.cursor = 'pointer';
-            controlUI.style.marginBottom = '22px';
-            controlUI.style.textAlign = 'center';
-            controlUI.title = 'Click to recenter the map';
-            controlDiv.appendChild(controlUI);
-
-            // Set CSS for the control interior
-            var controlText = document.createElement('div');
-            controlText.style.color = 'rgb(25,25,25)';
-            controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-            controlText.style.fontSize = '16px';
-            controlText.style.lineHeight = '38px';
-            controlText.style.paddingLeft = '5px';
-            controlText.style.paddingRight = '5px';
-            controlText.innerHTML = '<h3>Locate Me</h3>';
-            controlUI.appendChild(controlText);
-            controlUI.addEventListener('click', () => {
-                if (centerMapAtCurrentLocation) {
-                    centerMapAtCurrentLocation();
-                }
-            })
-            gMap.controls[window.google.maps.ControlPosition.BOTTOM_CENTER].push(controlDiv);
+            if (draggableSelectionPicker) {
+                const staticMarker = StaticMapMarker();
+                gMap.controls[window.google.maps.ControlPosition.CENTER].push(staticMarker);
+            }
             setMap(gMap);
         }
     }, [ref, map]);
@@ -54,6 +37,13 @@ function GoogleMap({
                 mapOptions.zoom = currentMapZoom;
             }
             map.setOptions(mapOptions);
+            if (draggableSelectionPicker) {
+                map.addListener('dragend', () => {
+                    if (onDragEnd) {
+                        onDragEnd(getCurrentLocation());
+                    }
+                });
+            }
         }
     }, [map, mapOptions]);
 
@@ -82,9 +72,15 @@ function GoogleMap({
         return ref.current;
     }
 
+    function getCurrentLocation() {
+        var center = map.getCenter();
+        const coords = { lat: center.lat(), lng: center.lng() };
+        return coords;
+    }
+
     return (
         <>
-            <div ref={ref} id="map" style={{ flexGrow: "1", height: "1000px" }} />
+            <div ref={ref} id="map" style={{ flexGrow: "1", height: "500px" }} />
             {Children.map(children, (child) => {
                 if (isValidElement(child)) {
                     return cloneElement(child, { map })

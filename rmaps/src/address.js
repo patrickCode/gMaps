@@ -1,45 +1,25 @@
-function Address({
-    formattedAddress,
-    country,
-    state,
-    city,
-    district,
-    sublocality,
-    postalCode,
-}) {
+import DisplayAddress from "./displayAddress"
+import AddressInput from "./addressInput";
+
+const Address = ({
+    address,
+    mapCenter,
+    changeAddress,
+    isAddressLoading,
+}) => {
+    if (isAddressLoading) {
+        return (<></>);
+    }
     return (
-        <div>
-            <h4>{formattedAddress}</h4>
-            <table>
-                <tbody>
-                    <tr>
-                        <td>Country</td>
-                        <td>{country}</td>
-                    </tr>
-                    <tr>
-                        <td>State</td>
-                        <td>{state}</td>
-                    </tr>
-                    <tr>
-                        <td>City/Town</td>
-                        <td>{city}</td>
-                    </tr>
-                    <tr>
-                        <td>District</td>
-                        <td>{district}</td>
-                    </tr>
-                    <tr>
-                        <td>Sub Locality</td>
-                        <td>{sublocality}</td>
-                    </tr>
-                    <tr>
-                        <td>Pincode</td>
-                        <td>{postalCode}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    )
+        <>
+            <h4>
+                @{mapCenter.lat},{mapCenter.lng}
+            </h4>
+
+            <DisplayAddress {...address} />
+            <AddressInput onAddressEntered={changeAddress} />
+        </>
+    );
 }
 
 export default Address;

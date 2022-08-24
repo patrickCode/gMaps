@@ -1,12 +1,11 @@
-import GoogleMap from './GoogleMap';
-import MapMarker from './MapMarker';
 import { findAddress, findLocation } from './geocoder';
 import { useEffect, useState } from 'react';
-import { Wrapper } from '@googlemaps/react-wrapper';
 import Address from './address';
-import AddressInput from './addressInput';
+import MapWithDynamicMarker from './MapWithDynamicMarker';
+import MapWithStaticMarker from './MapWithStaticMarker';
 
-const GOOGLE_MAP_API_KEY = 'AIzaSyDNEusX-n0cmkMes2CsAXrRAmVFrClf4vA';
+const GOOGLE_MAP_API_KEY = '<<ADD_YOUR_MAP_KEY_HERE>>';
+const USE_DRAGGABLE_MAP_PICKER = true;
 
 const mapLoadingRender = (status) => {
     return <h2>{status}...</h2>
@@ -14,35 +13,33 @@ const mapLoadingRender = (status) => {
 
 function Map() {
     const zoom = 16;
-
     const [mapCenter, setMapCenter] = useState();
-    const [isMapLoading, setMapLoading] = useState(true);
     const [isMapLoaded, setMapLoaded] = useState(false);
     const [address, setAddress] = useState();
     const [isAddressLoading, setAddressLoading] = useState(true);
     const [isCenteringInProgress, setCenteringInProgress] = useState(false);
 
     const centerMapAtCurrentLocation = function () {
+        // To avoid multiple invocations of the centering funcion
         if (isCenteringInProgress) {
             return;
         }
         setCenteringInProgress(true);
-        setMapLoading(true);
         window.navigator.geolocation.getCurrentPosition((position) => {
             const currentLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
             setMapCenter(currentLocation);
             showAddress(currentLocation);
-            setMapLoading(false);
             setCenteringInProgress(false);
             setMapLoaded(true);
         });
     }
 
     useEffect(() => {
-        if (isMapLoading) {
+        // One time invocation of map centering
+        if (!isMapLoaded) {
             centerMapAtCurrentLocation();
         }
-    }, [isMapLoading]);
+    });
 
 
     const handlerMarkerLocationChange = (location) => {
@@ -78,36 +75,59 @@ function Map() {
         });
     }
 
+    const handleMapDragEnd = (center) => {
+        if (!USE_DRAGGABLE_MAP_PICKER) return;
+        showAddress(center);
+        setMapCenter(center);
+    }
+
     if (!isMapLoaded) {
         return (
             <>
                 <h3>Please wait while we load the map. Ensure geolocation is turned on...</h3>
-                <button value='Locate Me' onClick={centerMapAtCurrentLocation}>Locate Me</button>
-                {
-                    isAddressLoading ? (<h4>Loading...</h4>) : <Address {...address} />
-                }
-                <AddressInput onAddressEntered={changeAddress} />
             </>
 
         )
     }
+    if (!USE_DRAGGABLE_MAP_PICKER) {
+        return (
+            <>
+                <MapWithDynamicMarker
+                    googleApiKey={GOOGLE_MAP_API_KEY}
+                    loadingDisplay={mapLoadingRender}
+                    centerMapAtCurrentLocation={centerMapAtCurrentLocation}
+                    mapCenter={mapCenter}
+                    zoom={zoom}
+                    handlerMarkerLocationChange={handlerMarkerLocationChange}
+                />
+                <Address
+                    mapCenter={mapCenter}
+                    address={address}
+                    isAddressLoading={isAddressLoading}
+                    changeAddress={changeAddress}
+                />
+            </>
+        );
+    }
     return (
         <>
-            <Wrapper apiKey={GOOGLE_MAP_API_KEY} render={mapLoadingRender}>
-                <GoogleMap centerMapAtCurrentLocation={centerMapAtCurrentLocation} center={mapCenter} zoom={zoom}>
-                    <MapMarker position={mapCenter} draggable={true} label={"H"} onLocationChanged={handlerMarkerLocationChange} />
-                </GoogleMap>
-            </Wrapper>
-            <h4>
-                @{mapCenter.lat},{mapCenter.lng}
-            </h4>
-            <button value='Locate Me' onClick={centerMapAtCurrentLocation}>Locate Me</button>
-            {
-                isAddressLoading ? (<h4>Loading...</h4>) : <Address {...address} />
-            }
-            <AddressInput onAddressEntered={changeAddress} />
+            <MapWithStaticMarker
+                googleApiKey={GOOGLE_MAP_API_KEY}
+                loadingDisplay={mapLoadingRender}
+                centerMapAtCurrentLocation={centerMapAtCurrentLocation}
+                mapCenter={mapCenter}
+                zoom={zoom}
+                handleMapDragEnd={handleMapDragEnd}
+            />
+            <Address
+                mapCenter={mapCenter}
+                address={address}
+                isAddressLoading={isAddressLoading}
+                changeAddress={changeAddress}
+            />
         </>
     );
+
 }
 
 export default Map;
