@@ -1,10 +1,13 @@
 import { findAddress, findLocation } from './geocoder';
 import { useEffect, useState } from 'react';
 import Address from './address';
-import MapWithDynamicMarker from './MapWithDynamicMarker';
-import MapWithStaticMarker from './MapWithStaticMarker';
+import GoogleMap from './GoogleMap';
+import MapMarker from './MapMarker';
+import { Wrapper } from '@googlemaps/react-wrapper';
+import LocateMeButton from './locateMeButton';
+import StaticMapMarker from './StaticMapMarker';
 
-const GOOGLE_MAP_API_KEY = '<<ADD_YOUR_MAP_KEY_HERE>>';
+const GOOGLE_MAP_API_KEY = '<<ENTER_YOUR_MAP_KEY>>';
 const USE_DRAGGABLE_MAP_PICKER = true;
 
 const mapLoadingRender = (status) => {
@@ -18,6 +21,8 @@ function Map() {
     const [address, setAddress] = useState();
     const [isAddressLoading, setAddressLoading] = useState(true);
     const [isCenteringInProgress, setCenteringInProgress] = useState(false);
+    const [locateMeButton, setLocateMeButton] = useState();
+    const [staticMarker, setStaticMarker] = useState();
 
     const centerMapAtCurrentLocation = function () {
         // To avoid multiple invocations of the centering funcion
@@ -31,15 +36,24 @@ function Map() {
             showAddress(currentLocation);
             setCenteringInProgress(false);
             setMapLoaded(true);
+        }, (error) => {
+            if (error.code === error.PERMISSION_DENIED) {
+                console.log('Map cannot be loaded if permission is denied');
+                // Fallback to manual flow
+            }
         });
-    }
+    };
 
     useEffect(() => {
         // One time invocation of map centering
         if (!isMapLoaded) {
             centerMapAtCurrentLocation();
+            setLocateMeButton(LocateMeButton(centerMapAtCurrentLocation));
+            if (USE_DRAGGABLE_MAP_PICKER) {
+                setStaticMarker(StaticMapMarker());
+            }
         }
-    });
+    }, [isMapLoaded]);
 
 
     const handlerMarkerLocationChange = (location) => {
@@ -89,36 +103,24 @@ function Map() {
 
         )
     }
-    if (!USE_DRAGGABLE_MAP_PICKER) {
-        return (
-            <>
-                <MapWithDynamicMarker
-                    googleApiKey={GOOGLE_MAP_API_KEY}
-                    loadingDisplay={mapLoadingRender}
-                    centerMapAtCurrentLocation={centerMapAtCurrentLocation}
-                    mapCenter={mapCenter}
-                    zoom={zoom}
-                    handlerMarkerLocationChange={handlerMarkerLocationChange}
-                />
-                <Address
-                    mapCenter={mapCenter}
-                    address={address}
-                    isAddressLoading={isAddressLoading}
-                    changeAddress={changeAddress}
-                />
-            </>
-        );
-    }
     return (
         <>
-            <MapWithStaticMarker
-                googleApiKey={GOOGLE_MAP_API_KEY}
-                loadingDisplay={mapLoadingRender}
-                centerMapAtCurrentLocation={centerMapAtCurrentLocation}
-                mapCenter={mapCenter}
-                zoom={zoom}
-                handleMapDragEnd={handleMapDragEnd}
-            />
+            <Wrapper apiKey={GOOGLE_MAP_API_KEY} render={mapLoadingRender}>
+                <GoogleMap
+                    centerMapAtCurrentLocation={centerMapAtCurrentLocation}
+                    center={mapCenter} zoom={zoom}
+                    locateMeButton={locateMeButton}
+                    draggableSelectionPicker={USE_DRAGGABLE_MAP_PICKER}
+                    staticMarker={staticMarker}
+                    onDragEnd={handleMapDragEnd} >
+                    {
+                        !USE_DRAGGABLE_MAP_PICKER ? (
+                            <MapMarker position={mapCenter} draggable={true} label={"H"} onLocationChanged={handlerMarkerLocationChange} />
+                        ) : <></>
+                    }
+
+                </GoogleMap>
+            </Wrapper>
             <Address
                 mapCenter={mapCenter}
                 address={address}
@@ -126,7 +128,47 @@ function Map() {
                 changeAddress={changeAddress}
             />
         </>
-    );
+
+    )
+
+    // if (!USE_DRAGGABLE_MAP_PICKER) {
+    //     return (
+    //         <>
+    //             <MapWithDynamicMarker
+    //                 googleApiKey={GOOGLE_MAP_API_KEY}
+    //                 loadingDisplay={mapLoadingRender}
+    //                 centerMapAtCurrentLocation={centerMapAtCurrentLocation}
+    //                 mapCenter={mapCenter}
+    //                 zoom={zoom}
+    //                 handlerMarkerLocationChange={handlerMarkerLocationChange}
+    //             />
+    //             <Address
+    //                 mapCenter={mapCenter}
+    //                 address={address}
+    //                 isAddressLoading={isAddressLoading}
+    //                 changeAddress={changeAddress}
+    //             />
+    //         </>
+    //     );
+    // }
+    // return (
+    //     <>
+    //         <MapWithStaticMarker
+    //             googleApiKey={GOOGLE_MAP_API_KEY}
+    //             loadingDisplay={mapLoadingRender}
+    //             centerMapAtCurrentLocation={centerMapAtCurrentLocation}
+    //             mapCenter={mapCenter}
+    //             zoom={zoom}
+    //             handleMapDragEnd={handleMapDragEnd}
+    //         />
+    //         <Address
+    //             mapCenter={mapCenter}
+    //             address={address}
+    //             isAddressLoading={isAddressLoading}
+    //             changeAddress={changeAddress}
+    //         />
+    //     </>
+    // );
 
 }
 

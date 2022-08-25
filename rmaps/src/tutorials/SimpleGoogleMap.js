@@ -1,14 +1,8 @@
-import React, { useRef, useEffect, useState, Children, isValidElement, cloneElement } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { isLatLngLiteral } from "@googlemaps/typescript-guards";
 import { createCustomEqual } from "fast-equals";
 
-function GoogleMap({
-    children,
-    centerMapAtCurrentLocation,
-    draggableSelectionPicker,
-    onDragEnd,
-    locateMeButton,
-    staticMarker,
+function GooleMap({
     ...mapOptions
 }) {
     const ref = useRef();
@@ -17,16 +11,10 @@ function GoogleMap({
     useEffect(() => {
         if (ref.current && !map) {
             const gMap = new window.google.maps.Map(ref.current, {});
-            gMap.controls[window.google.maps.ControlPosition.BOTTOM_CENTER].push(locateMeButton);
-
-            if (draggableSelectionPicker &&staticMarker) {
-                gMap.controls[window.google.maps.ControlPosition.CENTER].push(staticMarker);
-            }
             setMap(gMap);
         }
     }, [ref, map]);
 
-    // This is to ensure that the map doesn't load unnecessarily, unless the co-ordinates have changed
     useDeepCompareEffectForMaps(() => {
         if (map) {
             // Do not change the zoom if user has already zoomed on the map
@@ -35,13 +23,6 @@ function GoogleMap({
                 mapOptions.zoom = currentMapZoom;
             }
             map.setOptions(mapOptions);
-            if (draggableSelectionPicker) {
-                map.addListener('dragend', () => {
-                    if (onDragEnd) {
-                        onDragEnd(getCurrentLocation());
-                    }
-                });
-            }
         }
     }, [map, mapOptions]);
 
@@ -70,22 +51,11 @@ function GoogleMap({
         return ref.current;
     }
 
-    function getCurrentLocation() {
-        var center = map.getCenter();
-        const coords = { lat: center.lat(), lng: center.lng() };
-        return coords;
-    }
-
     return (
         <>
             <div ref={ref} id="map" style={{ flexGrow: "1", height: "500px" }} />
-            {Children.map(children, (child) => {
-                if (isValidElement(child)) {
-                    return cloneElement(child, { map })
-                }
-            })}
         </>
     );
 }
 
-export default GoogleMap;
+export default GooleMap;

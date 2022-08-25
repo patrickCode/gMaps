@@ -9,11 +9,17 @@ const MapWithDynamicMarker = ({
     mapCenter,
     zoom,
     handlerMarkerLocationChange,
+    staticMarker,
 }) => {
     return (
         <Wrapper apiKey={googleApiKey} render={loadingDisplay}>
             <GoogleMap centerMapAtCurrentLocation={centerMapAtCurrentLocation} center={mapCenter} zoom={zoom}>
-                <MapMarker position={mapCenter} draggable={true} label={"H"} onLocationChanged={handlerMarkerLocationChange} />
+                {
+                    staticMarker ? <></> : (
+                        <MapMarker position={mapCenter} draggable={true} label={"H"} onLocationChanged={handlerMarkerLocationChange} />
+                    )
+                }
+                
             </GoogleMap>
         </Wrapper>
     );

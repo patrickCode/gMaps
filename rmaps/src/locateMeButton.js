@@ -1,25 +1,27 @@
-const CreateLocateMeButton = (onClick) => {
+const LocateMeButton = (onClick) => {
     var locateMeDiv = document.createElement('div');
 
-    // Set CSS for the control border
+    // Set CSS for the button border
     var locateMeButton = document.createElement('div');
-    locateMeButton.style.backgroundColor = '#fff';
-    locateMeButton.style.border = '2px solid #fff';
+    locateMeButton.style.backgroundColor = 'rgba(51, 51, 51, 0.9)';
+    locateMeButton.style.boxSizing = 'border-box';
+    locateMeButton.style.borderRadius = '12px';
     locateMeButton.style.cursor = 'pointer';
     locateMeButton.style.marginBottom = '22px';
     locateMeButton.style.textAlign = 'center';
     locateMeButton.title = 'Click to recenter the map';
     locateMeDiv.appendChild(locateMeButton);
 
-    // Set CSS for the control interior
+    // Set CSS for the button interior
     var locateMeText = document.createElement('div');
-    locateMeText.style.color = 'rgb(25,25,25)';
-    locateMeText.style.fontFamily = 'Roboto,Arial,sans-serif';
-    locateMeText.style.fontSize = '16px';
-    locateMeText.style.lineHeight = '38px';
+    locateMeText.style.color = '#FFFFFF';
+    locateMeText.style.fontFamily = 'Work Sans';
+    locateMeText.style.fontSize = '14px';
+    locateMeText.style.fontWeight = '500';
+    locateMeText.style.lineHeight = '16.42px';
     locateMeText.style.paddingLeft = '5px';
     locateMeText.style.paddingRight = '5px';
-    locateMeText.innerHTML = '<h3>Locate Me</h3>';
+    locateMeText.innerHTML = 'Use my current location';
     locateMeButton.appendChild(locateMeText);
 
     if (onClick) {
@@ -31,4 +33,4 @@ const CreateLocateMeButton = (onClick) => {
     return locateMeDiv;
 }
 
-export default CreateLocateMeButton;
+export default LocateMeButton;

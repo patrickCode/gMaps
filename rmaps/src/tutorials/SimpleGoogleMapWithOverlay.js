@@ -1,32 +1,53 @@
-import React, { useRef, useEffect, useState, Children, isValidElement, cloneElement } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { isLatLngLiteral } from "@googlemaps/typescript-guards";
 import { createCustomEqual } from "fast-equals";
 
-function GoogleMap({
-    children,
-    centerMapAtCurrentLocation,
-    draggableSelectionPicker,
-    onDragEnd,
-    locateMeButton,
-    staticMarker,
+function GooleMap({
     ...mapOptions
 }) {
     const ref = useRef();
     const [map, setMap] = useState();
 
+    const createLocateMeButton = () => {
+        var locateMeDiv = document.createElement('div');
+
+        // Set CSS for the button border
+        var locateMeButton = document.createElement('div');
+        locateMeButton.style.backgroundColor = 'rgba(51, 51, 51, 0.9)';
+        locateMeButton.style.boxSizing = 'border-box';
+        locateMeButton.style.borderRadius = '12px';
+        locateMeButton.style.cursor = 'pointer';
+        locateMeButton.style.marginBottom = '22px';
+        locateMeButton.style.textAlign = 'center';
+        locateMeButton.title = 'Click to recenter the map';
+        locateMeDiv.appendChild(locateMeButton);
+    
+        // Set CSS for the button interior
+        var locateMeText = document.createElement('div');
+        locateMeText.style.color = '#FFFFFF';
+        locateMeText.style.fontFamily = 'Work Sans';
+        locateMeText.style.fontSize = '14px';
+        locateMeText.style.fontWeight = '500';
+        locateMeText.style.lineHeight = '16.42px';
+        locateMeText.style.paddingLeft = '5px';
+        locateMeText.style.paddingRight = '5px';
+        locateMeText.innerHTML = 'Use my current location';
+        locateMeButton.appendChild(locateMeText);
+
+        return locateMeButton;
+    }
+    const locateMeButton = createLocateMeButton();
+;
     useEffect(() => {
         if (ref.current && !map) {
             const gMap = new window.google.maps.Map(ref.current, {});
             gMap.controls[window.google.maps.ControlPosition.BOTTOM_CENTER].push(locateMeButton);
-
-            if (draggableSelectionPicker &&staticMarker) {
-                gMap.controls[window.google.maps.ControlPosition.CENTER].push(staticMarker);
-            }
             setMap(gMap);
         }
     }, [ref, map]);
 
-    // This is to ensure that the map doesn't load unnecessarily, unless the co-ordinates have changed
+    
+
     useDeepCompareEffectForMaps(() => {
         if (map) {
             // Do not change the zoom if user has already zoomed on the map
@@ -35,13 +56,6 @@ function GoogleMap({
                 mapOptions.zoom = currentMapZoom;
             }
             map.setOptions(mapOptions);
-            if (draggableSelectionPicker) {
-                map.addListener('dragend', () => {
-                    if (onDragEnd) {
-                        onDragEnd(getCurrentLocation());
-                    }
-                });
-            }
         }
     }, [map, mapOptions]);
 
@@ -70,22 +84,11 @@ function GoogleMap({
         return ref.current;
     }
 
-    function getCurrentLocation() {
-        var center = map.getCenter();
-        const coords = { lat: center.lat(), lng: center.lng() };
-        return coords;
-    }
-
     return (
         <>
             <div ref={ref} id="map" style={{ flexGrow: "1", height: "500px" }} />
-            {Children.map(children, (child) => {
-                if (isValidElement(child)) {
-                    return cloneElement(child, { map })
-                }
-            })}
         </>
     );
 }
 
-export default GoogleMap;
+export default GooleMap;
